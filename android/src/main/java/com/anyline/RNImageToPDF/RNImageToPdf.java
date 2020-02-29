@@ -159,7 +159,7 @@ public class RNImageToPdf extends ReactContextBaseJavaModule {
     }
 
     private Bitmap rotate(Bitmap bitmap, float degrees) {
-        Bitmap bInput /*your input bitmap*/, bOutput;
+        Bitmap bInput, bOutput;
 
         Matrix matrix = new Matrix();
         matrix.setRotate(degrees);
