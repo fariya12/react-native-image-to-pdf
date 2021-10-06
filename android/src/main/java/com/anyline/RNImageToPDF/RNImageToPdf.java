@@ -34,6 +34,15 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 
+// imports for scoped storage in android 10 and higher
+import android.os.Environment;
+import android.os.Build;
+
+import android.content.ContentResolver;
+import 	android.content.ContentValues;
+import android.provider.MediaStore;
+import java.io.OutputStream;
+
 
 public class RNImageToPdf extends ReactContextBaseJavaModule {
 
@@ -57,6 +66,8 @@ public class RNImageToPdf extends ReactContextBaseJavaModule {
         ReadableArray images = options.getArray("imagePaths");
 
         String documentName = options.getString("name");
+        // to handle the new option passed from Javascript
+        String targetPathRN = options.getString("targetPathRN");
 
         ReadableMap maxSize = options.hasKey("maxSize") ? options.getMap("maxSize") : null;
         int maxHeight = maxSize != null && maxSize.hasKey("height") ? maxSize.getInt("height") : 0;
@@ -93,15 +104,34 @@ public class RNImageToPdf extends ReactContextBaseJavaModule {
 
                 document.finishPage(page);
             }
+            
+            // check for android version
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                {
+                    // for android version 10 and higher
+                    ContentResolver resolver = reactContext.getContentResolver();
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, documentName);
+                    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+                    contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + "img-to-pdf");
+                    Uri uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues);
+                    document.writeTo(resolver.openOutputStream(uri));
+                    promise.resolve("success");
 
-            // write the document content
-            File targetPath = reactContext.getExternalFilesDir(null);
-            File filePath = new File(targetPath, documentName);
-            document.writeTo(new FileOutputStream(filePath));
-            log.info(format("Wrote %,d bytes to %s", filePath.length(), filePath.getPath()));
-            WritableMap resultMap = Arguments.createMap();
-            resultMap.putString("filePath", filePath.getAbsolutePath());
-            promise.resolve(resultMap);
+                }
+                else
+                {
+                    
+                    // for android version lower than 10
+                    File filePath = new File(targetPathRN, documentName);
+                    document.writeTo(new FileOutputStream(filePath));
+                    log.info(format("Wrote %,d bytes to %s", filePath.length(), filePath.getPath()));
+                    WritableMap resultMap = Arguments.createMap();
+                    resultMap.putString("filePath", filePath.getAbsolutePath());
+                    promise.resolve(resultMap);
+                }
+
+           
         } catch (Exception e) {
             promise.reject("failed", e);
         }
