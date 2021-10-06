@@ -55,6 +55,8 @@ const myAsyncPDFFunction = async () => {
 				height: Math.round(deviceHeight() / deviceWidth() * 900),
 			},
 			quality: .7, // optional compression paramter
+			targetPathRN: "/storage/emulated/0/Download/", // only for android version 9 and lower
+			//for versions higher than 9 it is stored in (Download/img-to-pdf/)
 		};
 		const pdf = await RNImageToPdf.createPDFbyImages(options);
 		
