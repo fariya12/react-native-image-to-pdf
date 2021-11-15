@@ -12,6 +12,6 @@
   "author": "Jonas Laux, Philipp Mueller",
   "license": "MIT",
   "peerDependencies": {
-    "react-native": "^0.64.2"
+    "react-native": "0.62.0"
   }
 }
